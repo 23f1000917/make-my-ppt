@@ -36,16 +36,12 @@ MakeMyPPT is a web application that transforms bulk text, markdown, or prose int
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/makemyppt.git
-   cd makemyppt
+   git clone https://github.com/23f1000917/make-my-ppt.git
+   cd make-my-ppt
    ```
 2. Install dependencies:
    ```bash
-   pip install fastapi uvicorn python-pptx requests
-   ```
-   For optional LLM providers, install:
-   ```bash
-   pip install openai anthropic google-generativeai
+   pip install -r requirements.txt
    ```
 3. Run the application:
    ```bash
@@ -72,7 +68,7 @@ MakeMyPPT is a web application that transforms bulk text, markdown, or prose int
 This project is licensed under the MIT License. See the LICENSE file for details.
 
 ## Demo
-A hosted demo is available at [insert your demo link here].
+A hosted demo is available at [https://make-my-ppt.onrender.com/].
 
 ## Limitations
 - Template style inference may not be perfect for complex layouts.
