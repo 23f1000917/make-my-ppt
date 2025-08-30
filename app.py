@@ -295,99 +295,191 @@ def build_presentation(
     plan: Dict[str, Any],
     reuse_images: bool = False,
 ) -> bytes:
-    """Build PowerPoint presentation"""
-    prs = Presentation(io.BytesIO(template_data)) if template_data else Presentation()
-    
-    # Collect images from template if needed
-    template_images = []
-    if template_data and reuse_images:
+    """Build PowerPoint presentation using template properly"""
+    # Create presentation from template or new blank presentation
+    if template_data:
+        prs = Presentation(io.BytesIO(template_data))
+        
+        # If reusing images, extract them from the template first
+        template_images = []
+        if reuse_images:
+            for slide in prs.slides:
+                images = []
+                for shape in slide.shapes:
+                    if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
+                        try:
+                            images.append({
+                                "blob": shape.image.blob,
+                                "left": int(shape.left),
+                                "top": int(shape.top),
+                                "width": int(shape.width),
+                                "height": int(shape.height),
+                            })
+                        except Exception:
+                            pass
+                template_images.append(images)
+        
+        # Clear only the content of existing slides, not the slides themselves
         for slide in prs.slides:
-            images = []
+            # Remove all shapes except those we might want to keep
+            shapes_to_remove = []
             for shape in slide.shapes:
-                if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
+                # Keep slide layout placeholders but remove content
+                if hasattr(shape, 'is_placeholder') and shape.is_placeholder:
                     try:
-                        images.append({
-                            "blob": shape.image.blob,
-                            "left": int(shape.left),
-                            "top": int(shape.top),
-                            "width": int(shape.width),
-                            "height": int(shape.height),
-                        })
+                        if shape.placeholder_format.type == 1:  # Title
+                            shape.text = ""
+                        elif shape.placeholder_format.type in (2, 7):  # Body/content
+                            if hasattr(shape, 'text_frame'):
+                                shape.text_frame.text = ""
                     except Exception:
-                        pass
-            template_images.append(images)
-    
-    # Clear existing slides
-    for slide_id in list(prs.slides._sldIdLst):
-        rId = slide_id.rId
-        prs.part.drop_rel(rId)
-        prs.slides._sldIdLst.remove(slide_id)
-    
-    # Find appropriate layout
+                        shapes_to_remove.append(shape)
+                else:
+                    shapes_to_remove.append(shape)
+            
+            # Remove non-placeholder shapes
+            for shape in shapes_to_remove:
+                sp = shape._element
+                sp.getparent().remove(sp)
+    else:
+        prs = Presentation()
+        template_images = []
+
+    # Find appropriate layout for new slides if needed
     layout_idx = find_slide_layout(prs)
     slide_width = int(prs.slide_width)
     slide_height = int(prs.slide_height)
     
-    # Create slides
-    for idx, slide_data in enumerate(plan.get("slides", [])):
-        title = str(slide_data.get("title", "")).strip()[:120] or f"Slide {idx+1}"
-        bullets = [str(b).strip() for b in slide_data.get("bullets", []) if str(b).strip()][:10]
-        
-        slide = prs.slides.add_slide(prs.slide_layouts[layout_idx])
-        
-        # Add images first (behind text)
-        if template_images and idx < len(template_images):
-            text_zones = find_text_zones(slide)
-            for img in template_images[idx]:
-                img_rect = create_rect(img["left"], img["top"], img["width"], img["height"])
-                if overlaps_text(img_rect, text_zones):
-                    safe_zone = find_safe_zone(slide_width, slide_height, text_zones)
-                    img_rect = fit_in_box(img_rect, safe_zone)
-                try:
-                    slide.shapes.add_picture(
-                        io.BytesIO(img["blob"]),
-                        img_rect["left"], img_rect["top"],
-                        width=img_rect["width"], height=img_rect["height"]
-                    )
-                except Exception:
-                    pass
-        
-        # Add title
-        if slide.shapes.title:
-            slide.shapes.title.text = title
-        else:
-            textbox = slide.shapes.add_textbox(Inches(0.7), Inches(0.5), Inches(9), Inches(1))
-            textbox.text_frame.text = title
-            textbox.text_frame.paragraphs[0].font.size = Pt(32)
-            textbox.text_frame.paragraphs[0].font.bold = True
-        
-        # Add content
-        body = None
-        for placeholder in slide.placeholders:
-            try:
-                if placeholder.is_placeholder and placeholder.placeholder_format.type != 1:
-                    body = placeholder
-                    break
-            except Exception:
-                continue
-        
-        if body:
-            tf = body.text_frame
-            tf.clear()
-            if bullets:
-                tf.paragraphs[0].text = bullets[0]
-                for bullet in bullets[1:]:
-                    p = tf.add_paragraph()
-                    p.text = bullet
-        else:
-            textbox = slide.shapes.add_textbox(Inches(0.8), Inches(2.0), Inches(8.5), Inches(4.5))
-            tf = textbox.text_frame
-            if bullets:
-                tf.text = bullets[0]
-                for bullet in bullets[1:]:
-                    p = tf.add_paragraph()
-                    p.text = bullet
+    # Determine how many slides we need to create
+    plan_slides = plan.get("slides", [])
     
+    # If we have a template with slides, use them as a base
+    if template_data and prs.slides:
+        # Reuse existing slides from template
+        for idx, slide_data in enumerate(plan_slides):
+            if idx < len(prs.slides):
+                # Use existing slide
+                slide = prs.slides[idx]
+            else:
+                # Add new slide if we need more than the template provides
+                slide = prs.slides.add_slide(prs.slide_layouts[layout_idx])
+            
+            title = str(slide_data.get("title", "")).strip()[:120] or f"Slide {idx+1}"
+            bullets = [str(b).strip() for b in slide_data.get("bullets", []) if str(b).strip()][:10]
+            
+            # Add title
+            if slide.shapes.title:
+                slide.shapes.title.text = title
+            else:
+                # Try to find a title placeholder
+                title_shape = None
+                for shape in slide.shapes:
+                    if hasattr(shape, 'is_placeholder') and shape.is_placeholder:
+                        try:
+                            if shape.placeholder_format.type == 1:  # Title
+                                title_shape = shape
+                                break
+                        except Exception:
+                            continue
+                
+                if title_shape:
+                    title_shape.text = title
+                else:
+                    # Add new title textbox
+                    textbox = slide.shapes.add_textbox(Inches(0.7), Inches(0.5), Inches(9), Inches(1))
+                    textbox.text_frame.text = title
+                    textbox.text_frame.paragraphs[0].font.size = Pt(32)
+                    textbox.text_frame.paragraphs[0].font.bold = True
+            
+            # Add content
+            body_shape = None
+            for shape in slide.shapes:
+                if hasattr(shape, 'is_placeholder') and shape.is_placeholder:
+                    try:
+                        if shape.placeholder_format.type in (2, 7):  # Body/content
+                            body_shape = shape
+                            break
+                    except Exception:
+                        continue
+            
+            if body_shape:
+                tf = body_shape.text_frame
+                tf.clear()
+                if bullets:
+                    tf.text = bullets[0]
+                    for bullet in bullets[1:]:
+                        p = tf.add_paragraph()
+                        p.text = bullet
+            else:
+                # Add new content textbox
+                textbox = slide.shapes.add_textbox(Inches(0.8), Inches(2.0), Inches(8.5), Inches(4.5))
+                tf = textbox.text_frame
+                if bullets:
+                    tf.text = bullets[0]
+                    for bullet in bullets[1:]:
+                        p = tf.add_paragraph()
+                        p.text = bullet
+            
+            # Add images if reusing and available for this slide
+            if reuse_images and idx < len(template_images) and template_images[idx]:
+                text_zones = find_text_zones(slide)
+                for img in template_images[idx]:
+                    img_rect = create_rect(img["left"], img["top"], img["width"], img["height"])
+                    if overlaps_text(img_rect, text_zones):
+                        safe_zone = find_safe_zone(slide_width, slide_height, text_zones)
+                        img_rect = fit_in_box(img_rect, safe_zone)
+                    try:
+                        slide.shapes.add_picture(
+                            io.BytesIO(img["blob"]),
+                            img_rect["left"], img_rect["top"],
+                            width=img_rect["width"], height=img_rect["height"]
+                        )
+                    except Exception:
+                        pass
+    else:
+        # No template - create all slides from scratch
+        for idx, slide_data in enumerate(plan_slides):
+            title = str(slide_data.get("title", "")).strip()[:120] or f"Slide {idx+1}"
+            bullets = [str(b).strip() for b in slide_data.get("bullets", []) if str(b).strip()][:10]
+            
+            slide = prs.slides.add_slide(prs.slide_layouts[layout_idx])
+            
+            # Add title
+            if slide.shapes.title:
+                slide.shapes.title.text = title
+            else:
+                textbox = slide.shapes.add_textbox(Inches(0.7), Inches(0.5), Inches(9), Inches(1))
+                textbox.text_frame.text = title
+                textbox.text_frame.paragraphs[0].font.size = Pt(32)
+                textbox.text_frame.paragraphs[0].font.bold = True
+            
+            # Add content
+            body = None
+            for placeholder in slide.placeholders:
+                try:
+                    if placeholder.is_placeholder and placeholder.placeholder_format.type != 1:
+                        body = placeholder
+                        break
+                except Exception:
+                    continue
+            
+            if body:
+                tf = body.text_frame
+                tf.clear()
+                if bullets:
+                    tf.text = bullets[0]
+                    for bullet in bullets[1:]:
+                        p = tf.add_paragraph()
+                        p.text = bullet
+            else:
+                textbox = slide.shapes.add_textbox(Inches(0.8), Inches(2.0), Inches(8.5), Inches(4.5))
+                tf = textbox.text_frame
+                if bullets:
+                    tf.text = bullets[0]
+                    for bullet in bullets[1:]:
+                        p = tf.add_paragraph()
+                        p.text = bullet
+
     # Save and return
     output = io.BytesIO()
     prs.save(output)
