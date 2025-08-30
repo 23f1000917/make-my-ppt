@@ -68,7 +68,7 @@ MakeMyPPT is a web application that transforms bulk text, markdown, or prose int
 This project is licensed under the MIT License. See the LICENSE file for details.
 
 ## Demo
-A hosted demo is available at [https://make-my-ppt.onrender.com/].
+A hosted demo is available at [https://make-my-ppt.vercel.app/].
 
 ## Limitations
 - Template style inference may not be perfect for complex layouts.
