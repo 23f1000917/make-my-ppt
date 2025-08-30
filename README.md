@@ -50,7 +50,7 @@ MakeMyPPT is a web application that transforms bulk text, markdown, or prose int
 4. Open `http://localhost:8000` in your browser.
 
 ### Usage
-1. **Enter Content**: Paste your text or markdown into the content field.
+1. **Enter Content**: Paste your text into the content field.
 2. **Provide Guidance** (optional): Add style or tone guidance (e.g., "investor pitch").
 3. **Upload Template** (optional): Upload a .pptx or .potx file to define the style.
 4. **Configure AI Settings**: Select an AI provider, enter your API key, and choose a model.
