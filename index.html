@@ -1,502 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="MakeMyPPT - AI Presentation Generator" />
-  <meta name="theme-color" content="#4f46e5" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MakeMyPPT - AI Presentation Generator</title>
-
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <style>
-    :root {
-      --primary-bg: #0f172a;
-      --secondary-bg: #1e293b;
-      --accent: #4f46e5;
-      --text: #f1f5f9;
-      --muted: #94a3b8;
-      --border: #334155;
-    }
-    
-    @media (prefers-color-scheme: light) {
-      :root {
-        --primary-bg: #ffffff;
-        --secondary-bg: #f8fafc;
-        --accent: #4f46e5;
-        --text: #0f172a;
-        --muted: #64748b;
-        --border: #e2e8f0;
-      }
-    }
-
     body {
-      font-family: 'Inter', sans-serif;
-      background: var(--primary-bg);
-      color: var(--text);
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
+      background-color: #f8f9fa;
+      padding: 20px;
     }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background: var(--secondary-bg);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      font-weight: 700;
-      font-size: 1.25rem;
-    }
-
     .container {
-      max-width: 1200px;
-      margin: 2rem auto;
-      padding: 0 1rem;
+      max-width: 800px;
+      margin: 0 auto;
     }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 300px 1fr;
-      gap: 1.5rem;
-    }
-
-    @media (max-width: 968px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .sidebar {
-      background: var(--secondary-bg);
-      border-radius: 12px;
-      padding: 1.25rem;
-      border: 1px solid var(--border);
-    }
-
-    .main-content {
-      background: var(--secondary-bg);
-      border-radius: 12px;
-      padding: 1.5rem;
-      border: 1px solid var(--border);
-    }
-
     .card {
-      background: var(--secondary-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--primary-bg);
-      color: var(--text);
-      margin-bottom: 1rem;
-    }
-
-    button {
-      background: var(--accent);
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 500;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .history-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background: var(--secondary-bg);
-      border: 1px solid var(--border);
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    .btn-primary {
+      background-color: #4f46e5;
+      border-color: #4f46e5;
     }
   </style>
 </head>
 <body>
-  <header class="header">
-    <div class="brand">
-      <i class="fas fa-presentation"></i>
-      <span>MakeMyPPT</span>
-    </div>
-    <div class="controls">
-      <button id="theme-toggle"><i class="fas fa-moon"></i></button>
-      <button id="settings-btn"><i class="fas fa-cog"></i></button>
-    </div>
-  </header>
-
   <div class="container">
-    <div class="grid">
-      <aside class="sidebar">
-        <h3>Tools</h3>
-        <div class="card">
-          <i class="fas fa-sliders"></i>
-          <span>Presentation Generator</span>
+    <div class="text-center mb-4">
+      <h1 class="display-5">MakeMyPPT</h1>
+      <p class="lead">AI Presentation Generator</p>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Content</h5>
+        <div class="mb-3">
+          <label class="form-label">Presentation Content</label>
+          <textarea class="form-control" id="content-input" rows="5" placeholder="Enter your content here..."></textarea>
         </div>
 
-        <h3>History</h3>
-        <div id="history-list"></div>
-
-        <div class="actions">
-          <button id="export-history"><i class="fas fa-download"></i> Export</button>
-          <button id="clear-history"><i class="fas fa-trash"></i> Clear</button>
-        </div>
-      </aside>
-
-      <main class="main-content">
-        <h2>Create Presentation</h2>
-        <p>Transform your content into professional slides</p>
-
-        <div class="content-section">
-          <h4>Content</h4>
-          <textarea id="content-input" placeholder="Enter your content here..." rows="6"></textarea>
-          
-          <div class="flex-grid">
-            <div>
-              <label>Style Guidance</label>
-              <input id="style-input" type="text" placeholder="e.g., Professional, Creative">
-            </div>
-            <div>
-              <label>Slide Count</label>
-              <input id="slide-count" type="number" min="1" max="40" value="10">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Style Guidance</label>
+              <input type="text" class="form-control" id="style-input" placeholder="e.g., Professional, Creative">
             </div>
           </div>
-
-          <label>Template (optional)</label>
-          <input id="template-input" type="file" accept=".pptx,.potx">
-          
-          <label>
-            <input id="reuse-images" type="checkbox">
-            Reuse template images
-          </label>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Slide Count (1-40)</label>
+              <input type="number" class="form-control" id="slide-count" min="1" max="40" value="10">
+            </div>
+          </div>
         </div>
 
-        <div class="settings-section">
-          <h4>AI Settings</h4>
-          
-          <label>AI Provider</label>
-          <select id="ai-provider">
+        <div class="mb-3">
+          <label class="form-label">Template File (optional)</label>
+          <input type="file" class="form-control" id="template-input" accept=".pptx,.potx">
+        </div>
+
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" id="reuse-images">
+          <label class="form-check-label" for="reuse-images">Reuse template images</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">AI Settings</h5>
+        
+        <div class="mb-3">
+          <label class="form-label">AI Provider</label>
+          <select class="form-select" id="ai-provider">
             <option value="aipipe">AI Pipe</option>
             <option value="openai">OpenAI</option>
             <option value="gemini">Google Gemini</option>
             <option value="anthropic">Anthropic Claude</option>
           </select>
+        </div>
 
-          <label>API Key</label>
+        <div class="mb-3">
+          <label class="form-label">API Key</label>
           <div class="input-group">
-            <input id="api-key" type="password" placeholder="Enter API key">
-            <button id="paste-key"><i class="fas fa-paste"></i></button>
+            <input type="password" class="form-control" id="api-key" placeholder="Enter API key">
+            <button class="btn btn-outline-secondary" type="button" id="paste-key">Paste</button>
           </div>
-
-          <label>Model</label>
-          <select id="ai-model"></select>
-
-          <div class="actions">
-            <button id="generate-btn" disabled>
-              <i class="fas fa-wand-magic-sparkles"></i>
-              Create Presentation
-            </button>
-            <button id="clear-btn">Clear</button>
-          </div>
-
-          <div id="status"></div>
         </div>
 
-        <div id="output"></div>
-      </main>
-    </div>
-  </div>
-
-  <div id="settings-modal" class="modal">
-    <div class="modal-content">
-      <h3>Settings</h3>
-      <label>Max History Items</label>
-      <input id="max-history" type="number" min="10" max="1000" value="200">
-      <button id="save-settings">Save</button>
-    </div>
-  </div>
-
-  <div id="toast-container"></div>
-
-  <script>
-  // Main application
-  const MakeMyPPT = (function() {
-    const state = {
-      history: [],
-      lastResult: null,
-      settings: {
-        maxHistory: 200
-      }
-    };
-
-    const elements = {
-      contentInput: document.getElementById('content-input'),
-      styleInput: document.getElementById('style-input'),
-      slideCount: document.getElementById('slide-count'),
-      templateInput: document.getElementById('template-input'),
-      reuseImages: document.getElementById('reuse-images'),
-      aiProvider: document.getElementById('ai-provider'),
-      apiKey: document.getElementById('api-key'),
-      aiModel: document.getElementById('ai-model'),
-      generateBtn: document.getElementById('generate-btn'),
-      clearBtn: document.getElementById('clear-btn'),
-      historyList: document.getElementById('history-list'),
-      status: document.getElementById('status'),
-      output: document.getElementById('output')
-    };
-
-    const models = {
-      openai: [
-        {id: 'gpt-4o-mini', label: 'GPT-4o Mini'},
-        {id: 'gpt-4o', label: 'GPT-4o'},
-        {id: 'gpt-4.1-nano', label: 'GPT-4.1 Nano'}
-      ],
-      aipipe: [
-        {id: 'gpt-4o-mini', label: 'GPT-4o Mini'},
-        {id: 'gpt-4o', label: 'GPT-4o'}
-      ],
-      gemini: [
-        {id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash'},
-        {id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash'}
-      ],
-      anthropic: [
-        {id: 'claude-3-5-sonnet', label: 'Claude 3.5 Sonnet'},
-        {id: 'claude-3-opus', label: 'Claude 3 Opus'}
-      ]
-    };
-
-    function init() {
-      loadSettings();
-      setupEventListeners();
-      updateModelOptions();
-      validateForm();
-      renderHistory();
-    }
-
-    function setupEventListeners() {
-      elements.aiProvider.addEventListener('change', updateModelOptions);
-      elements.generateBtn.addEventListener('click', generatePresentation);
-      elements.clearBtn.addEventListener('click', clearForm);
-      document.getElementById('paste-key').addEventListener('click', pasteApiKey);
-      
-      // Add input validation
-      ['contentInput', 'apiKey', 'slideCount'].forEach(id => {
-        elements[id].addEventListener('input', validateForm);
-      });
-    }
-
-    function validateForm() {
-      const hasContent = elements.contentInput.value.trim().length > 10;
-      const hasKey = elements.apiKey.value.trim().length > 10;
-      const validSlideCount = elements.slideCount.value >= 1 && elements.slideCount.value <= 40;
-      
-      elements.generateBtn.disabled = !(hasContent && hasKey && validSlideCount);
-    }
-
-    async function generatePresentation() {
-      if (!validateForm()) return;
-
-      setStatus('Creating presentation...', 'info');
-      setLoading(true);
-
-      try {
-        const formData = new FormData();
-        formData.append('content', elements.contentInput.value);
-        formData.append('style_guide', elements.styleInput.value);
-        formData.append('ai_provider', elements.aiProvider.value);
-        formData.append('api_key', elements.apiKey.value);
-        formData.append('model', elements.aiModel.value);
-        formData.append('slide_count', elements.slideCount.value);
-        formData.append('reuse_images', elements.reuseImages.checked);
-        
-        if (elements.templateInput.files[0]) {
-          formData.append('template', elements.templateInput.files[0]);
-        }
-
-        const response = await fetch('/create', {
-          method: 'POST',
-          body: formData
-        });
-
-        if (!response.ok) {
-          throw new Error(`Server error: ${response.status}`);
-        }
-
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        
-        // Save to history
-        addToHistory({
-          title: elements.styleInput.value || 'Presentation',
-          timestamp: Date.now(),
-          slideCount: elements.slideCount.value,
-          model: elements.aiModel.value
-        });
-
-        // Show download option
-        showResult(url);
-        setStatus('Presentation ready!', 'success');
-        
-      } catch (error) {
-        setStatus('Error: ' + error.message, 'error');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    function showResult(url) {
-      elements.output.innerHTML = `
-        <div class="result-card">
-          <h4>Presentation Ready</h4>
-          <a href="${url}" download="presentation.pptx" class="download-btn">
-            <i class="fas fa-download"></i>
-            Download Presentation
-          </a>
+        <div class="mb-3">
+          <label class="form-label">Model</label>
+          <select class="form-select" id="ai-model">
+            <option value="gpt-4o-mini">GPT-4o Mini</option>
+          </select>
         </div>
-      `;
-    }
 
-    function setStatus(message, type = 'info') {
-      elements.status.textContent = message;
-      elements.status.className = `status ${type}`;
-    }
-
-    function setLoading(loading) {
-      elements.generateBtn.disabled = loading;
-      elements.generateBtn.innerHTML = loading ? 
-        '<i class="fas fa-spinner fa-spin"></i> Processing...' : 
-        '<i class="fas fa-wand-magic-sparkles"></i> Create Presentation';
-    }
-
-    function addToHistory(item) {
-      state.history.unshift(item);
-      if (state.history.length > state.settings.maxHistory) {
-        state.history.pop();
-      }
-      saveHistory();
-      renderHistory();
-    }
-
-    function renderHistory() {
-      elements.historyList.innerHTML = state.history.map(item => `
-        <div class="history-item">
-          <div>
-            <strong>${escapeHtml(item.title)}</strong>
-            <div>${new Date(item.timestamp).toLocaleString()}</div>
-          </div>
-          <button onclick="MakeMyPPT.downloadHistoryItem(${item.timestamp})">
-            <i class="fas fa-download"></i>
+        <div class="d-grid gap-2">
+          <button class="btn btn-primary btn-lg" id="generate-btn" disabled>
+            Create Presentation
           </button>
         </div>
-      `).join('');
-    }
+      </div>
+    </div>
 
-    function updateModelOptions() {
-      const provider = elements.aiProvider.value;
-      const providerModels = models[provider] || [];
-      
-      elements.aiModel.innerHTML = providerModels.map(model => `
-        <option value="${model.id}">${model.label}</option>
-      `).join('');
-    }
+    <div id="status" class="alert alert-info mt-3 d-none"></div>
+    <div id="output" class="mt-3"></div>
+  </div>
 
-    async function pasteApiKey() {
-      try {
-        const text = await navigator.clipboard.readText();
-        elements.apiKey.value = text;
-        validateForm();
-        showToast('API key pasted');
-      } catch (error) {
-        showToast('Could not paste from clipboard', 'error');
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const models = {
+        openai: ['gpt-4o-mini', 'gpt-4o'],
+        aipipe: ['gpt-4o-mini', 'gpt-4o'],
+        gemini: ['gemini-1.5-flash', 'gemini-2.5-flash'],
+        anthropic: ['claude-3-5-sonnet', 'claude-3-opus']
+      };
+
+      const aiProvider = document.getElementById('ai-provider');
+      const aiModel = document.getElementById('ai-model');
+      const generateBtn = document.getElementById('generate-btn');
+      const status = document.getElementById('status');
+
+      // Update model options when provider changes
+      aiProvider.addEventListener('change', function() {
+        const providerModels = models[this.value] || [];
+        aiModel.innerHTML = '';
+        providerModels.forEach(model => {
+          aiModel.innerHTML += `<option value="${model}">${model}</option>`;
+        });
+      });
+
+      // Validate form
+      function validateForm() {
+        const hasContent = document.getElementById('content-input').value.trim().length > 10;
+        const hasKey = document.getElementById('api-key').value.trim().length > 10;
+        generateBtn.disabled = !(hasContent && hasKey);
       }
-    }
 
-    function clearForm() {
-      elements.contentInput.value = '';
-      elements.styleInput.value = '';
-      elements.slideCount.value = '10';
-      elements.templateInput.value = '';
-      elements.reuseImages.checked = false;
-      elements.output.innerHTML = '';
-      setStatus('');
-    }
+      document.getElementById('content-input').addEventListener('input', validateForm);
+      document.getElementById('api-key').addEventListener('input', validateForm);
 
-    function showToast(message, type = 'info') {
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.textContent = message;
-      document.getElementById('toast-container').appendChild(toast);
-      
-      setTimeout(() => toast.remove(), 3000);
-    }
-
-    function escapeHtml(text) {
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    function loadSettings() {
-      const saved = localStorage.getItem('makemyppt_settings');
-      if (saved) {
-        state.settings = {...state.settings, ...JSON.parse(saved)};
-      }
-      
-      const history = localStorage.getItem('makemyppt_history');
-      if (history) {
-        state.history = JSON.parse(history);
-      }
-    }
-
-    function saveHistory() {
-      localStorage.setItem('makemyppt_history', JSON.stringify(state.history));
-    }
-
-    return {
-      init,
-      downloadHistoryItem: (timestamp) => {
-        const item = state.history.find(i => i.timestamp === timestamp);
-        if (item) {
-          // Implementation for downloading historical items
-          showToast('Feature coming soon');
+      // Paste API key
+      document.getElementById('paste-key').addEventListener('click', async function() {
+        try {
+          const text = await navigator.clipboard.readText();
+          document.getElementById('api-key').value = text;
+          validateForm();
+        } catch (error) {
+          alert('Could not paste from clipboard');
         }
-      }
-    };
-  })();
+      });
 
-  // Initialize the application
-  document.addEventListener('DOMContentLoaded', MakeMyPPT.init);
+      // Generate presentation
+      generateBtn.addEventListener('click', async function() {
+        const content = document.getElementById('content-input').value;
+        const style = document.getElementById('style-input').value;
+        const slideCount = document.getElementById('slide-count').value;
+        const provider = document.getElementById('ai-provider').value;
+        const apiKey = document.getElementById('api-key').value;
+        const model = document.getElementById('ai-model').value;
+        const reuseImages = document.getElementById('reuse-images').checked;
+        const templateFile = document.getElementById('template-input').files[0];
+
+        status.classList.remove('d-none');
+        status.textContent = 'Creating presentation...';
+        generateBtn.disabled = true;
+
+        try {
+          const formData = new FormData();
+          formData.append('content', content);
+          formData.append('style_guide', style);
+          formData.append('ai_provider', provider);
+          formData.append('api_key', apiKey);
+          formData.append('model', model);
+          formData.append('slide_count', slideCount);
+          formData.append('reuse_images', reuseImages);
+          
+          if (templateFile) {
+            formData.append('template', templateFile);
+          }
+
+          const response = await fetch('/create', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+          }
+
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          
+          document.getElementById('output').innerHTML = `
+            <div class="alert alert-success">
+              Presentation created successfully! 
+              <a href="${url}" download="presentation.pptx" class="alert-link">Download now</a>
+            </div>
+          `;
+          
+          status.classList.add('d-none');
+        } catch (error) {
+          status.textContent = 'Error: ' + error.message;
+        } finally {
+          generateBtn.disabled = false;
+        }
+      });
+    });
   </script>
 </body>
 </html>
